@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prismatic Gallery | Photography Portfolio</title>
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* Header Section */
+        header {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 2rem 5%;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .header-text {
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        /* Controls Section */
+        .gallery-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .filter-btn, .view-btn {
+            background: #f8f9fa;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover, .view-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .filter-btn.active, .view-btn.active {
+            background: #2575fc;
+            color: white;
+        }
+        
+        /* Gallery Container */
+        .gallery-container {
+            padding: 2rem 5%;
+        }
+        
+        /* Grid View */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            height: 300px;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: white;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover .overlay {
+            opacity: 1;
+        }
+        
+        /* Masonry View */
+        .gallery-masonry {
+            columns: 3 300px;
+            column-gap: 1.5rem;
+            display: none;
+        }
+        
+        .gallery-masonry .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+            height: auto;
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-image-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+        
+        .modal-info {
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .modal-controls {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+        
+        .modal-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .modal-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .gallery-controls {
+                flex-wrap: wrap;
+            }
+            
+            .gallery-masonry {
+                columns: 2 250px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .gallery-masonry {
+                columns: 1 100%;
+            }
+        }
+        
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Prismatic Gallery</h1>
+        <p class="header-text">A gallery is a form of display, not necessarily the same as your local shop down the road, but in the context of art, it is a space where anyone interested in art or an art collection exhibited at a specific gallery, can view the work, and even make an inquiry into the purchase of an artwork.</p>
+    </header>
+    
+    <div class="gallery-controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="nature">Nature</button>
+        <button class="filter-btn" data-filter="urban">Urban</button>
+        <button class="filter-btn" data-filter="abstract">Abstract</button>
+        
+        <div style="margin-left: auto;"></div>
+        
+        <button class="view-btn active" data-view="grid">Grid</button>
+        <button class="view-btn" data-view="masonry">Masonry</button>
+    </div>
+    
+    <div class="gallery-container">
+        <div class="gallery-grid active-view">
+            <!-- Gallery items will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="gallery-masonry">
+            <!-- Same gallery items will be cloned here -->
+        </div>
+    </div>
+    
+    <div class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            
+            <div class="modal-image-container">
+                <img src="" alt="" class="modal-image">
+            </div>
+            
+            <div class="modal-info">
+                <h3 class="modal-title"></h3>
+                <p class="modal-description"></p>
+            </div>
+            
+            <div class="modal-controls">
+                <button class="modal-btn" id="prev-btn">&larr;</button>
+                <button class="modal-btn" id="next-btn">&rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image data
+            const galleryData = [
+                {
+                    id: 1,
+                    src: "forest.jpg",
+                    alt: "Forest Landscape",
+                    title: "Tranquil Forest",
+                    description: "Morning light filters through ancient trees in this peaceful forest scene.",
+                    category: "nature"
+                },
+                {
+                    id: 2,
+                    src: "city.jpg",
+                    alt: "City Skyline",
+                    title: "Urban Reflections",
+                    description: "The city skyline reflected in the calm water at dusk.",
+                    category: "urban"
+                },
+                {
+                    id: 3,
+                    src: "abstract.jpg",
+                    alt: "Abstract Patterns",
+                    title: "Geometric Dreams",
+                    description: "Abstract geometric patterns create a hypnotic visual experience.",
+                    category: "abstract"
+                },
+                {
+                    id: 4,
+                    src: "mountain.jpg",
+                    alt: "Mountain Peaks",
+                    title: "Alpine Majesty",
+                    description: "Snow-capped mountain peaks rising above the clouds.",
+                    category: "nature"
+                },
+                {
+                    id: 5,
+                    src: "urban.jpg",
+                    alt: "Urban Street Art",
+                    title: "Street Expression",
+                    description: "Vibrant street art transforms an ordinary wall into a canvas of urban culture.",
+                    category: "urban"
+                },
+                {
+                    id: 6,
+                    src: "light.jpeg",
+                    alt: "Light Trails",
+                    title: "Light Symphony",
+                    description: "Abstract light trails create a dynamic composition of color and movement.",
+                    category: "abstract"
+                },
+                {
+                    id: 7,
+                    src: "cost.jpg",
+                    alt: "Coastline View",
+                    title: "Coastal Serenity",
+                    description: "Dramatic coastline with waves crashing against ancient cliffs.",
+                    category: "nature"
+                },
+                {
+                    id: 8,
+                    src: "night.jpg",
+                    alt: "Night Architecture",
+                    title: "Architectural Nights",
+                    description: "Modern architectural elements illuminated against the night sky.",
+                    category: "urban"
+                },
+                {
+                    id: 9,
+                    src: "fluid.jpg",
+                    alt: "Fluid Abstract",
+                    title: "Liquid Imagination",
+                    description: "Fluid abstract forms that seem to flow and transform before your eyes.",
+                    category: "abstract"
+                }
+            ];
+            
+            // DOM Elements
+            const gridGallery = document.querySelector('.gallery-grid');
+            const masonryGallery = document.querySelector('.gallery-masonry');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const viewButtons = document.querySelectorAll('.view-btn');
+            const modal = document.querySelector('.modal');
+            const modalImage = document.querySelector('.modal-image');
+            const modalTitle = document.querySelector('.modal-title');
+            const modalDescription = document.querySelector('.modal-description');
+            const closeModalBtn = document.querySelector('.close-modal');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            let currentFilter = 'all';
+            let currentImageIndex = 0;
+            let filteredImages = [];
+            
+            // Initialize Gallery
+            function initializeGallery() {
+                // Populate gallery with items
+                galleryData.forEach((item, index) => {
+                    const galleryItem = createGalleryItem(item, index);
+                    gridGallery.appendChild(galleryItem);
+                    
+                    const masonryItem = galleryItem.cloneNode(true);
+                    masonryGallery.appendChild(masonryItem);
+                    
+                    // Add click event to masonry items
+                    masonryItem.addEventListener('click', function() {
+                        openModal(index);
+                    });
+                });
+                
+                // Add animation delay to items
+                document.querySelectorAll('.gallery-item').forEach((item, index) => {
+                    item.classList.add('fade-in');
+                    item.style.animationDelay = `${index * 0.1}s`;
+                });
+                
+                // Set initial filtered images
+                filteredImages = [...galleryData];
+            }
+            
+            // Create gallery item
+            function createGalleryItem(item, index) {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.dataset.category = item.category;
+                
+                const image = document.createElement('img');
+                image.src = item.src;
+                image.alt = item.alt;
+                
+                const overlay = document.createElement('div');
+                overlay.className = 'overlay';
+                
+                const title = document.createElement('h3');
+                title.textContent = item.title;
+                
+                overlay.appendChild(title);
+                galleryItem.appendChild(image);
+                galleryItem.appendChild(overlay);
+                
+                // Add click event
+                galleryItem.addEventListener('click', function() {
+                    openModal(index);
+                });
+                
+                return galleryItem;
+            }
+            
+            // Filter gallery items
+            function filterGallery(category) {
+                document.querySelectorAll('.gallery-item').forEach(item => {
+                    if (category === 'all' || item.dataset.category === category) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Update filtered images array
+                filteredImages = category === 'all' 
+                    ? [...galleryData] 
+                    : galleryData.filter(item => item.category === category);
+            }
+            
+            // Toggle view
+            function toggleView(view) {
+                const gridView = document.querySelector('.gallery-grid');
+                const masonryView = document.querySelector('.gallery-masonry');
+                
+                if (view === 'grid') {
+                    gridView.classList.add('active-view');
+                    masonryView.classList.remove('active-view');
+                    gridView.style.display = 'grid';
+                    masonryView.style.display = 'none';
+                } else {
+                    masonryView.classList.add('active-view');
+                    gridView.classList.remove('active-view');
+                    masonryView.style.display = 'block';
+                    gridView.style.display = 'none';
+                }
+            }
+            
+            // Open modal
+            function openModal(index) {
+                currentImageIndex = index;
+                const item = filteredImages[currentImageIndex];
+                
+                modalImage.src = item.src;
+                modalImage.alt = item.alt;
+                modalTitle.textContent = item.title;
+                modalDescription.textContent = item.description;
+                
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Close modal
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Navigate to next image
+            function nextImage() {
+                currentImageIndex = (currentImageIndex + 1) % filteredImages.length;
+                const item = filteredImages[currentImageIndex];
+                
+                modalImage.src = item.src;
+                modalImage.alt = item.alt;
+                modalTitle.textContent = item.title;
+                modalDescription.textContent = item.description;
+            }
+            
+            // Navigate to previous image
+            function prevImage() {
+                currentImageIndex = (currentImageIndex - 1 + filteredImages.length) % filteredImages.length;
+                const item = filteredImages[currentImageIndex];
+                
+                modalImage.src = item.src;
+                modalImage.alt = item.alt;
+                modalTitle.textContent = item.title;
+                modalDescription.textContent = item.description;
+            }
+            
+            // Event Listeners
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    currentFilter = filter;
+                    
+                    // Update active button
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Filter items
+                    filterGallery(filter);
+                });
+            });
+            
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    
+                    // Update active button
+                    viewButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Toggle view
+                    toggleView(view);
+                });
+            });
+            
+            closeModalBtn.addEventListener('click', closeModal);
+            prevBtn.addEventListener('click', prevImage);
+            nextBtn.addEventListener('click', nextImage);
+            
+            // Close modal with escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+                
+                if (modal.classList.contains('active')) {
+                    if (e.key === 'ArrowRight') {
+                        nextImage();
+                    } else if (e.key === 'ArrowLeft') {
+                        prevImage();
+                    }
+                }
+            });
+            
+            // Close modal when clicking outside content
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // Initialize gallery
+            initializeGallery();
+        });
+    </script>
+</body>
+</html>

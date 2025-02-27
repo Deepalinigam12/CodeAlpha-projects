@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .calculator {
+            width: 320px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            background-color: #22252d;
+        }
+        
+        .display {
+            padding: 20px;
+            height: 160px;
+            background-color: #22252d;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .previous-operand {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            min-height: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+            text-align: right;
+        }
+        
+        .current-operand {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #292d36;
+            padding: 15px;
+            border-radius: 20px 20px 0 0;
+            margin-top: -20px;
+        }
+        
+        button {
+            border: none;
+            outline: none;
+            background-color: #292d36;
+            color: white;
+            font-size: 1.3rem;
+            padding: 20px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #30343f;
+        }
+        
+        .operator {
+            color: #26fbd4;
+        }
+        
+        .clear, .delete {
+            color: #fc5a5a;
+        }
+        
+        .equals {
+            background-color: #26fbd4;
+            color: #292d36;
+            font-weight: bold;
+        }
+        
+        .equals:hover {
+            background-color: #20d6b5;
+        }
+        
+        .highlight {
+            animation: highlight 0.3s ease;
+        }
+        
+        @keyframes highlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        
+        .theme-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #22252d;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #26fbd4;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .light-theme {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        }
+        
+        .light-theme .calculator {
+            background-color: #f7f7f7;
+        }
+        
+        .light-theme .display {
+            background-color: #f7f7f7;
+        }
+        
+        .light-theme .previous-operand {
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .light-theme .current-operand {
+            color: #333;
+        }
+        
+        .light-theme .buttons {
+            background-color: #eaeaea;
+        }
+        
+        .light-theme button {
+            background-color: #eaeaea;
+            color: #333;
+        }
+        
+        .light-theme button:hover {
+            background-color: #d4d4d4;
+        }
+        
+        .light-theme .operator {
+            color: #0891b2;
+        }
+        
+        .light-theme .clear, .light-theme .delete {
+            color: #e11d48;
+        }
+        
+        .light-theme .equals {
+            background-color: #0891b2;
+            color: white;
+        }
+        
+        .light-theme .equals:hover {
+            background-color: #0e7490;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch">
+        Toggle Theme
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="calculator">
+        <div class="display">
+            <div class="previous-operand" id="previousOperand"></div>
+            <div class="current-operand" id="currentOperand">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">AC</button>
+            <button class="delete" onclick="deleteDigit()">DEL</button>
+            <button class="operator" onclick="appendOperator('%')">%</button>
+            <button class="operator" onclick="appendOperator('÷')">÷</button>
+            
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('×')">×</button>
+            
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+            
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <button onclick="appendNumber('0')">0</button>
+            <button onclick="appendDecimal()">.</button>
+            <button onclick="negate()">+/-</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentOperand = '0';
+        let previousOperand = '';
+        let operation = undefined;
+        let shouldResetScreen = false;
+        
+        const currentOperandScreen = document.getElementById('currentOperand');
+        const previousOperandScreen = document.getElementById('previousOperand');
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        // Theme switcher
+        themeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('light-theme');
+        });
+        
+        function appendNumber(number) {
+            if (currentOperand === '0' || shouldResetScreen) {
+                currentOperand = number;
+                shouldResetScreen = false;
+            } else {
+                currentOperand += number;
+            }
+            updateDisplay();
+            animateButton(number);
+        }
+        
+        function appendOperator(op) {
+            if (operation !== undefined && !shouldResetScreen) {
+                calculate();
+            }
+            operation = op;
+            previousOperand = currentOperand;
+            shouldResetScreen = true;
+            updateDisplay();
+            animateButton(op);
+        }
+        
+        function appendDecimal() {
+            if (shouldResetScreen) {
+                currentOperand = '0';
+                shouldResetScreen = false;
+            }
+            if (!currentOperand.includes('.')) {
+                currentOperand += '.';
+            }
+            updateDisplay();
+            animateButton('.');
+        }
+        
+        function clearDisplay() {
+            currentOperand = '0';
+            previousOperand = '';
+            operation = undefined;
+            updateDisplay();
+            animateButton('AC');
+        }
+        
+        function deleteDigit() {
+            if (currentOperand.length === 1 || (currentOperand.length === 2 && currentOperand.startsWith('-'))) {
+                currentOperand = '0';
+            } else {
+                currentOperand = currentOperand.slice(0, -1);
+            }
+            updateDisplay();
+            animateButton('DEL');
+        }
+        
+        function negate() {
+            if (currentOperand === '0') return;
+            currentOperand = currentOperand.startsWith('-') ? 
+                currentOperand.slice(1) : '-' + currentOperand;
+            updateDisplay();
+            animateButton('+/-');
+        }
+        
+        function calculate() {
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+':
+                    computation = prev + current;
+                    break;
+                case '-':
+                    computation = prev - current;
+                    break;
+                case '×':
+                    computation = prev * current;
+                    break;
+                case '÷':
+                    if (current === 0) {
+                        alert("Cannot divide by zero!");
+                        clearDisplay();
+                        return;
+                    }
+                    computation = prev / current;
+                    break;
+                case '%':
+                    computation = prev % current;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Format the result to avoid very long decimals
+            computation = Number(computation.toFixed(10)).toString();
+            
+            currentOperand = computation;
+            previousOperand = previousOperand + ' ' + operation + ' ' + current;
+            operation = undefined;
+            shouldResetScreen = true;
+            updateDisplay();
+            animateButton('=');
+        }
+        
+        function updateDisplay() {
+            // Format large numbers with commas
+            let formattedCurrent = formatNumber(currentOperand);
+            
+            currentOperandScreen.textContent = formattedCurrent;
+            
+            if (operation !== undefined) {
+                previousOperandScreen.textContent = `${formatNumber(previousOperand)} ${operation}`;
+            } else {
+                previousOperandScreen.textContent = '';
+            }
+        }
+        
+        function formatNumber(num) {
+            const strNum = num.toString();
+            if (strNum.includes('.')) {
+                const parts = strNum.split('.');
+                const integerPart = parseFloat(parts[0]).toLocaleString('en');
+                return `${integerPart}.${parts[1]}`;
+            } else {
+                return parseFloat(strNum).toLocaleString('en');
+            }
+        }
+        
+        function animateButton(value) {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                if (button.textContent === value || 
+                   (button.textContent === 'AC' && value === 'AC') ||
+                   (button.textContent === 'DEL' && value === 'DEL') ||
+                   (button.textContent === '+/-' && value === '+/-') ||
+                   (button.textContent === '=' && value === '=')) {
+                    button.classList.add('highlight');
+                    setTimeout(() => {
+                        button.classList.remove('highlight');
+                    }, 200);
+                }
+            });
+        }
+        
+        // Keyboard support
+        document.addEventListener('keydown', (event) => {
+            if (event.key >= '0' && event.key <= '9') {
+                appendNumber(event.key);
+            } else if (event.key === '.') {
+                appendDecimal();
+            } else if (event.key === '+') {
+                appendOperator('+');
+            } else if (event.key === '-') {
+                appendOperator('-');
+            } else if (event.key === '*') {
+                appendOperator('×');
+            } else if (event.key === '/') {
+                event.preventDefault(); // Prevent browser's find feature
+                appendOperator('÷');
+            } else if (event.key === '%') {
+                appendOperator('%');
+            } else if (event.key === 'Enter' || event.key === '=') {
+                calculate();
+            } else if (event.key === 'Backspace') {
+                deleteDigit();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
